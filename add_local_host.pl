@@ -60,5 +60,5 @@ my $enabled_file = $NGINX_ENA . $hostname;
 symlink($ava_file, $enabled_file);
 
 say "Ok Run:";
-`sudo service nginx reload`;
+`sudo service nginx restart`;
 say "http://$hostname";
