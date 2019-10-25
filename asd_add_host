@@ -1,0 +1,60 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use utf8;
+use feature 'say';
+
+my $HOSTS = '/etc/hosts';
+my $NGX_AVAILABLE = '/etc/nginx/sites-available/';
+my $NGX_ENABLED = '/etc/nginx/sites-enabled/';
+my $WORKSPACE = "/home/$ENV{USER}/workspace/";
+
+my $hostname = $ARGV[0] or usage();
+
+sub usage {
+    say "Usage: $0 <hostname>";
+    exit();
+}
+
+sub add_to_hosts {
+    my ($hostname) = @_;
+    $hostname or die 'No hostname given';
+
+    my $exist;
+    open(my $h_read, '<', $HOSTS) or die $!;
+    while (my $str = <$h_read>) {
+        next if $str =~ /^#/;
+        if ($str =~ /^[.\d]+\s+$hostname$/) {
+            $exist = 1;
+            last;
+        }
+    }
+    close $h_read;
+    return if $exist;
+
+    open(my $h_add, '>>', $HOSTS) or die "Can't write $HOSTS $!";
+    print $h_add "127.0.0.1\t$hostname\n";
+    close $h_add;
+}
+
+sub add_to_nginx {
+    my ($hostname) = @_;
+    my $ava_file = $NGX_AVAILABLE . $hostname;
+    open(my $ava, '>', $ava_file) or die $!;
+    print $ava <<END;
+    server {
+        listen 80;
+        server_name $hostname;
+        root ${WORKSPACE}${hostname};
+        index index.html;
+    }
+END
+    symlink($ava_file, $NGX_ENABLED . $hostname);
+}
+
+add_to_hosts($hostname);
+add_to_nginx($hostname);
+
+say "Ok Run:";
+`sudo service nginx restart`;
+say "http://$hostname";
