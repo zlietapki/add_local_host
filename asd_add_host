@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# sudo ln -s /home/asd/workspace/scripts/asd_add_host /usr/local/bin/
 use strict;
 use warnings;
 use utf8;
@@ -7,8 +8,7 @@ use feature 'say';
 my $HOSTS = '/etc/hosts';
 my $NGX_AVAILABLE = '/etc/nginx/sites-available/';
 my $NGX_ENABLED = '/etc/nginx/sites-enabled/';
-my $WORKSPACE = "/home/$ENV{USER}/workspace/";
-
+my $WORKSPACE = "/home/asd/workspace/";
 my $hostname = $ARGV[0] or usage();
 
 sub usage {
@@ -40,14 +40,14 @@ sub add_to_hosts {
 sub add_to_nginx {
     my ($hostname) = @_;
     my $ava_file = $NGX_AVAILABLE . $hostname;
-    open(my $ava, '>', $ava_file) or die $!;
+    open(my $ava, '>', $ava_file) or die "Can't write to $ava_file $!";
     print $ava <<END;
-    server {
-        listen 80;
-        server_name $hostname;
-        root ${WORKSPACE}${hostname};
-        index index.html;
-    }
+server {
+    listen 80;
+    server_name $hostname;
+    root ${WORKSPACE}${hostname};
+    index index.html;
+}
 END
     symlink($ava_file, $NGX_ENABLED . $hostname);
 }

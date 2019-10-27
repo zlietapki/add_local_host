@@ -1,0 +1,4 @@
+#!/bin/bash
+MY_TIMER=${@:-420}
+sleep $MY_TIMER
+kdialog --passivepopup 'COFFEE!' 60
