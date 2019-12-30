@@ -16,24 +16,29 @@ sub usage {
     exit();
 }
 
-sub add_to_hosts {
+sub is_hosts_exist {
     my ($hostname) = @_;
     $hostname or die 'No hostname given';
 
-    my $exist;
+    my $is_exist;
     open(my $h_read, '<', $HOSTS) or die $!;
     while (my $str = <$h_read>) {
         next if $str =~ /^#/;
-        if ($str =~ /^[.\d]+\s+$hostname$/) {
-            $exist = 1;
+        if ($str =~ /^[.\d]+\s+$hostname\s?/) {
+            $is_exist = 1;
             last;
         }
     }
     close $h_read;
-    return if $exist;
+    return $is_exist;
+}
+
+sub add_to_hosts {
+    my ($hostname) = @_;
+    $hostname or die 'No hostname given';
 
     open(my $h_add, '>>', $HOSTS) or die "Can't write $HOSTS $!";
-    print $h_add "127.0.0.1\t$hostname\n";
+    print $h_add "127.0.0.1\t$hostname #added by asd_add_host script\n";
     close $h_add;
 }
 
@@ -52,7 +57,11 @@ END
     symlink($ava_file, $NGX_ENABLED . $hostname);
 }
 
-add_to_hosts($hostname);
+if (is_hosts_exist($hostname)) {
+    print "Host $hostname already exists in /etc/hosts Skip.\n";
+} else {
+    add_to_hosts($hostname);
+}
 add_to_nginx($hostname);
 
 say "Ok Run:";
